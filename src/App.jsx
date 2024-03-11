@@ -1,92 +1,37 @@
-import { useState, useEffect } from "react";
-import "../node_modules/modern-normalize/modern-normalize.css";
-import { ImageGallery } from "./components/ImageGallery/ImageGallery";
-import { LoadMoreBtn } from "./components/LoadMoreBtn/LoadMoreBtn";
-import { Loader } from "./components/Loader/Loader";
-import { SearchBar } from "./components/SearchBar/SearchBar";
-import { fetchImages } from "./rest-api";
+import { Navigation } from "./components/Navigation/Navigation";
+import { Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { ErrorMessage } from "./components/ErrorMessage/ErrorMessage";
-import { ImageModal } from "./components/ImageModal/ImageModal";
-import css from "./App.module.css";
-import Modal from "react-modal";
+import { Suspense } from "react";
+import { lazy } from "react";
+import Loader from "./components/Loader/Loader";
+
+const HomePage = lazy(() => import("./pages/HomePage/HomePage"));
+const MoviePage = lazy(() => import("./pages/MoviePage/MoviePage"));
+const MovieDetailsPage = lazy(() =>
+  import("./pages/MovieDetailsPage/MovieDetailsPage")
+);
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
+const MovieCast = lazy(() => import("./components/MovieCast/MovieCast"));
+const MovieReviews = lazy(() =>
+  import("./components/MovieReviews/MovieReviews")
+);
 
 export const App = () => {
-  const [query, setQuery] = useState("");
-  const [images, setImages] = useState([]);
-  const [loader, setLoader] = useState(false);
-  const [error, setError] = useState(false);
-  const [page, setPage] = useState(1);
-  const [isOpen, setIsOpen] = useState(false);
-  const [content, setContent] = useState({});
-  const [showBtn, setShowBtn] = useState(false);
-
-  Modal.setAppElement("#root");
-
-  useEffect(() => {
-    if (!query) {
-      return;
-    }
-
-    const getImages = async () => {
-      try {
-        setLoader(true);
-        const { imageData, totalPages } = await fetchImages(query, page);
-
-        setImages((prevImages) => {
-          return [...prevImages, ...imageData];
-        });
-
-        setShowBtn(totalPages !== page && imageData.length > 0);
-      } catch (error) {
-        setError(true);
-      } finally {
-        setLoader(false);
-      }
-    };
-    getImages();
-  }, [query, page]);
-
-  const handleSubmit = (inputQuery) => {
-    setQuery(inputQuery);
-    setPage(1);
-    setImages([]);
-  };
-
-  const handleLoadMore = () => {
-    setPage(page + 1);
-  };
-
-  const handleOpen = (value) => {
-    setIsOpen(true);
-    setContent(value);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   return (
     <div>
-      <SearchBar onSubmit={handleSubmit} />
-      <div className={css.main}>
-        {images.length > 0 && (
-          <ImageGallery gallery={images} onOpen={handleOpen} />
-        )}
-        {loader && <Loader />}
-        {error && <ErrorMessage />}
-        {showBtn && <LoadMoreBtn onClick={handleLoadMore} />}
-        <Modal
-          isOpen={isOpen}
-          onRequestClose={handleClose}
-          className={css.modal}
-          overlayClassName={css.overlay}
-        >
-          <ImageModal content={content} />
-        </Modal>
-
-        <Toaster position="top-right" />
-      </div>
+      <Navigation />
+      <Suspense fallback={<Loader />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/movies" element={<MoviePage />} />
+          <Route path="/movies/:movieId" element={<MovieDetailsPage />}>
+            <Route path="cast" element={<MovieCast />} />
+            <Route path="reviews" element={<MovieReviews />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+      <Toaster position="top-right" />
     </div>
   );
 };

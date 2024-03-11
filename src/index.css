@@ -1,6 +1,5 @@
 li {
   margin: 0;
-  list-style-type: none;
 }
 
 h1,
@@ -16,7 +15,6 @@ p {
 ul {
   margin: 0;
   padding: 0;
-  list-style: none;
 }
 
 img {
@@ -38,7 +36,6 @@ img {
   -moz-osx-font-smoothing: grayscale;
 
   margin: 0 auto;
-  text-align: center;
 }
 td,
 th {
